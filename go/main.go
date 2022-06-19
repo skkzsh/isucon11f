@@ -552,7 +552,7 @@ type ClassScore struct {
 }
 
 // GetGrades GET /api/users/me/grades 成績取得
-func (h *handlers) GetGrades(c echo.Context) error {
+func (h *handlers) GetGrades(c echo.Context) error { // FIXME: 高速化
 	userID, _, _, err := getUserInfo(c)
 	if err != nil {
 		c.Logger().Error(err)
@@ -960,7 +960,7 @@ type GetClassResponse struct {
 }
 
 // GetClasses GET /api/courses/:courseID/classes 科目に紐づく講義一覧の取得
-func (h *handlers) GetClasses(c echo.Context) error {
+func (h *handlers) GetClasses(c echo.Context) error { // FIXME: 高速化
 	userID, _, _, err := getUserInfo(c)
 	if err != nil {
 		c.Logger().Error(err)
@@ -1082,7 +1082,7 @@ func (h *handlers) AddClass(c echo.Context) error {
 }
 
 // SubmitAssignment POST /api/courses/:courseID/classes/:classID/assignments 課題の提出
-func (h *handlers) SubmitAssignment(c echo.Context) error {
+func (h *handlers) SubmitAssignment(c echo.Context) error { // FIXME: 高速化
 	userID, _, _, err := getUserInfo(c)
 	if err != nil {
 		c.Logger().Error(err)
@@ -1303,7 +1303,7 @@ type GetAnnouncementsResponse struct {
 }
 
 // GetAnnouncementList GET /api/announcements お知らせ一覧取得
-func (h *handlers) GetAnnouncementList(c echo.Context) error {
+func (h *handlers) GetAnnouncementList(c echo.Context) error { // FIXME: 高速化
 	userID, _, _, err := getUserInfo(c)
 	if err != nil {
 		c.Logger().Error(err)
@@ -1491,7 +1491,7 @@ type AnnouncementDetail struct {
 }
 
 // GetAnnouncementDetail GET /api/announcements/:announcementID お知らせ詳細取得
-func (h *handlers) GetAnnouncementDetail(c echo.Context) error {
+func (h *handlers) GetAnnouncementDetail(c echo.Context) error { // FIXME: 高速化
 	userID, _, _, err := getUserInfo(c)
 	if err != nil {
 		c.Logger().Error(err)
