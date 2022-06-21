@@ -565,13 +565,13 @@ type ClassScore struct {
 }
 
 type SubmissionsCount struct {
-	ClassID     string `db:"class_id"`
-	Count       int    `db:"count"`
+	ClassID string `db:"class_id"`
+	Count   int    `db:"count"`
 }
 
 type SubmissionsScore struct {
-	ClassID     string         `db:"class_id"`
-	Score       sql.NullInt64  `db:"score"`
+	ClassID string        `db:"class_id"`
+	Score   sql.NullInt64 `db:"score"`
 }
 
 // GetGrades GET /api/users/me/grades 成績取得
@@ -1497,6 +1497,11 @@ type Announcement struct {
 	Message  string `db:"message"`
 }
 
+type UnreadAnnouncement struct {
+	AnnouncementID string `db:"announcement_id"`
+	UserID         string `db:"user_id"`
+}
+
 type AddAnnouncementRequest struct {
 	ID       string `json:"id"`
 	CourseID string `json:"course_id"`
@@ -1557,12 +1562,22 @@ func (h *handlers) AddAnnouncement(c echo.Context) error { // FIXME: 高速化
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
+	unreadAnnouncements := []UnreadAnnouncement{}
 	for _, user := range targets {
-		//if _, err := tx.Exec("INSERT INTO `unread_announcements` (`announcement_id`, `user_id`) VALUES (?, ?)", req.ID, user.ID); err != nil {
-		if _, err := h.DB.Exec("INSERT INTO `unread_announcements` (`announcement_id`, `user_id`) VALUES (?, ?)", req.ID, user.ID); err != nil { // FIXME: slow query
-			c.Logger().Error(err)
-			return c.NoContent(http.StatusInternalServerError)
-		}
+		unreadAnnouncements = append(unreadAnnouncements, UnreadAnnouncement{
+			AnnouncementID: req.ID,
+			UserID:         user.ID,
+		})
+		//	if _, err := tx.Exec("INSERT INTO `unread_announcements` (`announcement_id`, `user_id`) VALUES (?, ?)", req.ID, user.ID); err != nil {
+		//	c.Logger().Error(err)
+		//	return c.NoContent(http.StatusInternalServerError)
+		//}
+	}
+	if _, err := h.DB.NamedExec(
+		"INSERT INTO `unread_announcements` (`announcement_id`, `user_id`) VALUES (:announcement_id, :user_id)",
+		unreadAnnouncements); err != nil {
+		c.Logger().Error(err)
+		return c.NoContent(http.StatusInternalServerError)
 	}
 
 	//if err := tx.Commit(); err != nil {
