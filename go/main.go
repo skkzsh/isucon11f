@@ -584,6 +584,23 @@ func (h *handlers) GetGrades(c echo.Context) error { // FIXME: 高速化
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
+	var courseIDs []string
+	for _, course := range registeredCourses {
+		courseIDs = append(courseIDs, course.ID)
+	}
+
+	// 履修している科目の講義一覧の取得
+	query, params, err := sqlx.In("SELECT * FROM `classes` WHERE `course_id` IN (?)", courseIDs, )
+	if err != nil {
+		c.Logger().Error(err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+	var registeredCoursesClasses []Class
+	if err := h.DB.Select(&registeredCoursesClasses, query, params...); err != nil {
+		c.Logger().Error(err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
 	var submissionsCounts []SubmissionsCount
 	if err := h.DB.Select(&submissionsCounts, "SELECT `class_id`, COUNT(*) as `count` FROM `submissions` group by `class_id`"); err != nil {
 		c.Logger().Error(err)
@@ -601,15 +618,19 @@ func (h *handlers) GetGrades(c echo.Context) error { // FIXME: 高速化
 	for _, course := range registeredCourses {
 		// 講義一覧の取得
 		var classes []Class
-		query = "SELECT *" +
-			" FROM `classes`" +
-			" WHERE `course_id` = ?" +
-			" ORDER BY `part` DESC"
-		if err := h.DB.Select(&classes, query, course.ID); err != nil {
-			c.Logger().Error(err)
-			return c.NoContent(http.StatusInternalServerError)
+		for _, registeredCoursesClass := range registeredCoursesClasses {
+			if registeredCoursesClass.CourseID == course.ID {
+				classes = append(classes, registeredCoursesClass)
+			}
 		}
-
+		//query = "SELECT *" +
+		//	" FROM `classes`" +
+		//	" WHERE `course_id` = ?" +
+		//	" ORDER BY `part` DESC"
+		//if err := h.DB.Select(&classes, query, course.ID); err != nil {
+		//	c.Logger().Error(err)
+		//	return c.NoContent(http.StatusInternalServerError)
+		//}
 
 		// 講義毎の成績計算処理
 		classScores := make([]ClassScore, 0, len(classes))
