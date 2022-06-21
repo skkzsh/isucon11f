@@ -565,6 +565,11 @@ type SubmissionsCount struct {
 	Count       int    `db:"count"`
 }
 
+type SubmissionsScore struct {
+	ClassID     string         `db:"class_id"`
+	Score       sql.NullInt64  `db:"score"`
+}
+
 // GetGrades GET /api/users/me/grades 成績取得
 func (h *handlers) GetGrades(c echo.Context) error { // FIXME: 高速化
 	userID, _, _, err := getUserInfo(c)
@@ -611,6 +616,16 @@ func (h *handlers) GetGrades(c echo.Context) error { // FIXME: 高速化
 		submissionsCountsMap[submissionsCount.ClassID] = submissionsCount.Count
 	}
 
+	var myScores []SubmissionsScore
+	if err := h.DB.Select(&myScores, "SELECT `class_id`, `score` FROM `submissions` WHERE `user_id` = ?", userID); err != nil && err != sql.ErrNoRows {
+		c.Logger().Error(err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+	var MyScoresMap = make(map[string]sql.NullInt64)
+	for _, myScore := range myScores {
+		MyScoresMap[myScore.ClassID] = myScore.Score
+	}
+
 	// 科目毎の成績計算処理
 	courseResults := make([]CourseResult, 0, len(registeredCourses))
 	myGPA := 0.0
@@ -642,11 +657,13 @@ func (h *handlers) GetGrades(c echo.Context) error { // FIXME: 高速化
 			//	return c.NoContent(http.StatusInternalServerError)
 			//}
 
-			var myScore sql.NullInt64
-			if err := h.DB.Get(&myScore, "SELECT `submissions`.`score` FROM `submissions` WHERE `user_id` = ? AND `class_id` = ?", userID, class.ID); err != nil && err != sql.ErrNoRows {
-				c.Logger().Error(err)
-				return c.NoContent(http.StatusInternalServerError)
-			} else if err == sql.ErrNoRows || !myScore.Valid {
+			//var myScore sql.NullInt64
+			var myScore = MyScoresMap[class.ID]
+			//if err := h.DB.Get(&myScore, "SELECT `submissions`.`score` FROM `submissions` WHERE `user_id` = ? AND `class_id` = ?", userID, class.ID); err != nil && err != sql.ErrNoRows {
+			//	c.Logger().Error(err)
+			//	return c.NoContent(http.StatusInternalServerError)
+			//} else if err == sql.ErrNoRows || !myScore.Valid {
+			if !myScore.Valid {
 				classScores = append(classScores, ClassScore{
 					ClassID: class.ID,
 					Part:    class.Part,
