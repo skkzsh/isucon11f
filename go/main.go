@@ -560,6 +560,11 @@ type ClassScore struct {
 	Submitters int    `json:"submitters"` // 提出した学生数
 }
 
+type SubmissionsCount struct {
+	ClassID     string `db:"class_id"`
+	Count       int    `db:"count"`
+}
+
 // GetGrades GET /api/users/me/grades 成績取得
 func (h *handlers) GetGrades(c echo.Context) error { // FIXME: 高速化
 	userID, _, _, err := getUserInfo(c)
@@ -595,10 +600,14 @@ func (h *handlers) GetGrades(c echo.Context) error { // FIXME: 高速化
 			return c.NoContent(http.StatusInternalServerError)
 		}
 
-		var submissionsCountsMap = make(map[string]int)
-		if err := h.DB.Select(&submissionsCountsMap, "SELECT `class_id`, COUNT(*) FROM `submissions` group by class_id"); err != nil {
+		var submissionsCounts []SubmissionsCount
+		if err := h.DB.Select(&submissionsCounts, "SELECT `class_id`, COUNT(*) as `count` FROM `submissions` group by `class_id`"); err != nil {
 			c.Logger().Error(err)
 			return c.NoContent(http.StatusInternalServerError)
+		}
+		var submissionsCountsMap = make(map[string]int)
+		for _, submissionsCount := range submissionsCounts {
+			submissionsCountsMap[submissionsCount.ClassID] = submissionsCount.Count
 		}
 
 		// 講義毎の成績計算処理
