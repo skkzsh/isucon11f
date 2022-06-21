@@ -425,7 +425,7 @@ type RegisterCoursesErrorResponse struct {
 }
 
 // RegisterCourses PUT /api/users/me/courses 履修登録
-func (h *handlers) RegisterCourses(c echo.Context) error {
+func (h *handlers) RegisterCourses(c echo.Context) error { // FIXME: 高速化
 	userID, _, _, err := getUserInfo(c)
 	if err != nil {
 		c.Logger().Error(err)
@@ -575,7 +575,7 @@ type SubmissionsScore struct {
 }
 
 // GetGrades GET /api/users/me/grades 成績取得
-func (h *handlers) GetGrades(c echo.Context) error {
+func (h *handlers) GetGrades(c echo.Context) error { // FIXME: 高速化
 	userID, _, _, err := getUserInfo(c)
 	if err != nil {
 		c.Logger().Error(err)
