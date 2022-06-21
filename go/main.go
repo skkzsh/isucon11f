@@ -595,15 +595,21 @@ func (h *handlers) GetGrades(c echo.Context) error { // FIXME: 高速化
 			return c.NoContent(http.StatusInternalServerError)
 		}
 
+		var submissionsCountsMap = make(map[string]int)
+		if err := h.DB.Select(&submissionsCountsMap, "SELECT `class_id`, COUNT(*) FROM `submissions` group by class_id"); err != nil {
+			c.Logger().Error(err)
+			return c.NoContent(http.StatusInternalServerError)
+		}
+
 		// 講義毎の成績計算処理
 		classScores := make([]ClassScore, 0, len(classes))
 		var myTotalScore int
 		for _, class := range classes {
-			var submissionsCount int
-			if err := h.DB.Get(&submissionsCount, "SELECT COUNT(*) FROM `submissions` WHERE `class_id` = ?", class.ID); err != nil {
-				c.Logger().Error(err)
-				return c.NoContent(http.StatusInternalServerError)
-			}
+			//var submissionsCount int
+			//if err := h.DB.Get(&submissionsCount, "SELECT COUNT(*) FROM `submissions` WHERE `class_id` = ?", class.ID); err != nil {
+			//	c.Logger().Error(err)
+			//	return c.NoContent(http.StatusInternalServerError)
+			//}
 
 			var myScore sql.NullInt64
 			if err := h.DB.Get(&myScore, "SELECT `submissions`.`score` FROM `submissions` WHERE `user_id` = ? AND `class_id` = ?", userID, class.ID); err != nil && err != sql.ErrNoRows {
@@ -611,21 +617,23 @@ func (h *handlers) GetGrades(c echo.Context) error { // FIXME: 高速化
 				return c.NoContent(http.StatusInternalServerError)
 			} else if err == sql.ErrNoRows || !myScore.Valid {
 				classScores = append(classScores, ClassScore{
-					ClassID:    class.ID,
-					Part:       class.Part,
-					Title:      class.Title,
-					Score:      nil,
-					Submitters: submissionsCount,
+					ClassID: class.ID,
+					Part:    class.Part,
+					Title:   class.Title,
+					Score:   nil,
+					//Submitters: submissionsCount,
+					Submitters: submissionsCountsMap[class.ID],
 				})
 			} else {
 				score := int(myScore.Int64)
 				myTotalScore += score
 				classScores = append(classScores, ClassScore{
-					ClassID:    class.ID,
-					Part:       class.Part,
-					Title:      class.Title,
-					Score:      &score,
-					Submitters: submissionsCount,
+					ClassID: class.ID,
+					Part:    class.Part,
+					Title:   class.Title,
+					Score:   &score,
+					//Submitters: submissionsCount,
+					Submitters: submissionsCountsMap[class.ID],
 				})
 			}
 		}
