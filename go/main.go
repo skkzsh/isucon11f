@@ -135,7 +135,7 @@ func (h *handlers) Initialize(c echo.Context) error {
 }
 
 // IsLoggedIn ログイン確認用middleware
-func (h *handlers) IsLoggedIn(next echo.HandlerFunc) echo.HandlerFunc {
+func (h *handlers) IsLoggedIn(next echo.HandlerFunc) echo.HandlerFunc { // FIXME: 高速化
 	return func(c echo.Context) error {
 		sess, err := session.Get(SessionName, c)
 		if err != nil {
