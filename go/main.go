@@ -1243,8 +1243,8 @@ func (h *handlers) SubmitAssignment(c echo.Context) error { // FIXME: 高速化
 }
 
 type Score struct {
-	UserCode string `json:"user_code"`
-	Score    int    `json:"score"`
+	UserCode string `json:"user_code" db:"user_code"`
+	Score    int    `json:"score" db:"score"`
 }
 
 // RegisterScores PUT /api/courses/:courseID/classes/:classID/assignments/scores 採点結果登録
@@ -1276,12 +1276,18 @@ func (h *handlers) RegisterScores(c echo.Context) error { // FIXME: 高速化
 		return c.String(http.StatusBadRequest, "Invalid format.")
 	}
 
-	for _, score := range req {
-		//if _, err := tx.Exec("UPDATE `submissions` JOIN `users` ON `users`.`id` = `submissions`.`user_id` SET `score` = ? WHERE `users`.`code` = ? AND `class_id` = ?", score.Score, score.UserCode, classID); err != nil {
-		if _, err := h.DB.Exec("UPDATE `submissions` JOIN `users` ON `users`.`id` = `submissions`.`user_id` SET `score` = ? WHERE `users`.`code` = ? AND `class_id` = ?", score.Score, score.UserCode, classID); err != nil { // FIXME: slow query
-			c.Logger().Error(err)
-			return c.NoContent(http.StatusInternalServerError)
-		}
+	//for _, score := range req {
+	//	if _, err := tx.Exec("UPDATE `submissions` JOIN `users` ON `users`.`id` = `submissions`.`user_id` SET `score` = ? WHERE `users`.`code` = ? AND `class_id` = ?", score.Score, score.UserCode, classID); err != nil {
+	//		c.Logger().Error(err)
+	//		return c.NoContent(http.StatusInternalServerError)
+	//	}
+	//}
+
+	if _, err := h.DB.NamedExec(
+		"UPDATE `submissions` JOIN `users` ON `users`.`id` = `submissions`.`user_id` SET `score` = :score WHERE `users`.`code` = :user_code AND `class_id` = " +
+			classID, req); err != nil {
+		c.Logger().Error(err)
+		return c.NoContent(http.StatusInternalServerError)
 	}
 
 	//if err := tx.Commit(); err != nil {
