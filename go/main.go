@@ -590,7 +590,7 @@ func (h *handlers) GetGrades(c echo.Context) error { // FIXME: 高速化
 	}
 
 	// 履修している科目の講義一覧の取得
-	query, params, err := sqlx.In("SELECT * FROM `classes` WHERE `course_id` IN (?)", courseIDs, )
+	query, params, err := sqlx.In("SELECT * FROM `classes` WHERE `course_id` IN (?) ORDER BY `part` DESC", courseIDs, )
 	if err != nil {
 		c.Logger().Error(err)
 		return c.NoContent(http.StatusInternalServerError)
