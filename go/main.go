@@ -584,6 +584,16 @@ func (h *handlers) GetGrades(c echo.Context) error { // FIXME: 高速化
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
+	var submissionsCounts []SubmissionsCount
+	if err := h.DB.Select(&submissionsCounts, "SELECT `class_id`, COUNT(*) as `count` FROM `submissions` group by `class_id`"); err != nil {
+		c.Logger().Error(err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+	var submissionsCountsMap = make(map[string]int)
+	for _, submissionsCount := range submissionsCounts {
+		submissionsCountsMap[submissionsCount.ClassID] = submissionsCount.Count
+	}
+
 	// 科目毎の成績計算処理
 	courseResults := make([]CourseResult, 0, len(registeredCourses))
 	myGPA := 0.0
@@ -600,15 +610,6 @@ func (h *handlers) GetGrades(c echo.Context) error { // FIXME: 高速化
 			return c.NoContent(http.StatusInternalServerError)
 		}
 
-		var submissionsCounts []SubmissionsCount
-		if err := h.DB.Select(&submissionsCounts, "SELECT `class_id`, COUNT(*) as `count` FROM `submissions` group by `class_id`"); err != nil {
-			c.Logger().Error(err)
-			return c.NoContent(http.StatusInternalServerError)
-		}
-		var submissionsCountsMap = make(map[string]int)
-		for _, submissionsCount := range submissionsCounts {
-			submissionsCountsMap[submissionsCount.ClassID] = submissionsCount.Count
-		}
 
 		// 講義毎の成績計算処理
 		classScores := make([]ClassScore, 0, len(classes))
