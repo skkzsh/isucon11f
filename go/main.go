@@ -575,7 +575,7 @@ type SubmissionsScore struct {
 }
 
 // GetGrades GET /api/users/me/grades 成績取得
-func (h *handlers) GetGrades(c echo.Context) error { // FIXME: 高速化
+func (h *handlers) GetGrades(c echo.Context) error {
 	userID, _, _, err := getUserInfo(c)
 	if err != nil {
 		c.Logger().Error(err)
@@ -1248,7 +1248,7 @@ type Score struct {
 }
 
 // RegisterScores PUT /api/courses/:courseID/classes/:classID/assignments/scores 採点結果登録
-func (h *handlers) RegisterScores(c echo.Context) error {
+func (h *handlers) RegisterScores(c echo.Context) error { // FIXME: 高速化
 	classID := c.Param("classID")
 
 	//tx, err := h.DB.Beginx()
@@ -1278,7 +1278,7 @@ func (h *handlers) RegisterScores(c echo.Context) error {
 
 	for _, score := range req {
 		//if _, err := tx.Exec("UPDATE `submissions` JOIN `users` ON `users`.`id` = `submissions`.`user_id` SET `score` = ? WHERE `users`.`code` = ? AND `class_id` = ?", score.Score, score.UserCode, classID); err != nil {
-		if _, err := h.DB.Exec("UPDATE `submissions` JOIN `users` ON `users`.`id` = `submissions`.`user_id` SET `score` = ? WHERE `users`.`code` = ? AND `class_id` = ?", score.Score, score.UserCode, classID); err != nil {
+		if _, err := h.DB.Exec("UPDATE `submissions` JOIN `users` ON `users`.`id` = `submissions`.`user_id` SET `score` = ? WHERE `users`.`code` = ? AND `class_id` = ?", score.Score, score.UserCode, classID); err != nil { // FIXME: slow query
 			c.Logger().Error(err)
 			return c.NoContent(http.StatusInternalServerError)
 		}
@@ -1505,7 +1505,7 @@ type AddAnnouncementRequest struct {
 }
 
 // AddAnnouncement POST /api/announcements 新規お知らせ追加
-func (h *handlers) AddAnnouncement(c echo.Context) error {
+func (h *handlers) AddAnnouncement(c echo.Context) error { // FIXME: 高速化
 	var req AddAnnouncementRequest
 	if err := c.Bind(&req); err != nil {
 		return c.String(http.StatusBadRequest, "Invalid format.")
@@ -1559,7 +1559,7 @@ func (h *handlers) AddAnnouncement(c echo.Context) error {
 
 	for _, user := range targets {
 		//if _, err := tx.Exec("INSERT INTO `unread_announcements` (`announcement_id`, `user_id`) VALUES (?, ?)", req.ID, user.ID); err != nil {
-		if _, err := h.DB.Exec("INSERT INTO `unread_announcements` (`announcement_id`, `user_id`) VALUES (?, ?)", req.ID, user.ID); err != nil {
+		if _, err := h.DB.Exec("INSERT INTO `unread_announcements` (`announcement_id`, `user_id`) VALUES (?, ?)", req.ID, user.ID); err != nil { // FIXME: slow query
 			c.Logger().Error(err)
 			return c.NoContent(http.StatusInternalServerError)
 		}
