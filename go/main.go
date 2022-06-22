@@ -593,7 +593,7 @@ func (h *handlers) GetGrades(c echo.Context) error { // FIXME: 高速化
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	var courseIDs []string
+	var courseIDs = make([]string, len(registeredCourses))
 	for _, course := range registeredCourses {
 		courseIDs = append(courseIDs, course.ID)
 	}
@@ -1562,18 +1562,20 @@ func (h *handlers) AddAnnouncement(c echo.Context) error { // FIXME: 高速化
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	unreadAnnouncements := []UnreadAnnouncement{}
-	for _, user := range targets {
-		unreadAnnouncements = append(unreadAnnouncements, UnreadAnnouncement{
-			AnnouncementID: req.ID,
-			UserID:         user.ID,
-		})
-		//	if _, err := tx.Exec("INSERT INTO `unread_announcements` (`announcement_id`, `user_id`) VALUES (?, ?)", req.ID, user.ID); err != nil {
-		//	c.Logger().Error(err)
-		//	return c.NoContent(http.StatusInternalServerError)
-		//}
-	}
-	if len(unreadAnnouncements) > 0 {
+	if len(targets) > 0 {
+		unreadAnnouncements := []UnreadAnnouncement{}
+		// unreadAnnouncements := make([]UnreadAnnouncement, len(targets))
+		for _, user := range targets {
+			unreadAnnouncements = append(unreadAnnouncements, UnreadAnnouncement{
+				AnnouncementID: req.ID,
+				UserID:         user.ID,
+			})
+			//	if _, err := tx.Exec("INSERT INTO `unread_announcements` (`announcement_id`, `user_id`) VALUES (?, ?)", req.ID, user.ID); err != nil {
+			//	c.Logger().Error(err)
+			//	return c.NoContent(http.StatusInternalServerError)
+			//}
+		}
+
 		if _, err := h.DB.NamedExec(
 			"INSERT INTO `unread_announcements` (`announcement_id`, `user_id`) VALUES (:announcement_id, :user_id)",
 			unreadAnnouncements); err != nil {
