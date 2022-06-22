@@ -691,7 +691,7 @@ func (h *handlers) GetGrades(c echo.Context) error { // FIXME: 高速化
 			}
 		}
 
-		// FIXME: ユーザに依存しない
+		// FIXME: ユーザに依存しない, slow query
 		// この科目を履修している学生のTotalScore一覧を取得
 		var totals []int
 		query := "SELECT IFNULL(SUM(`submissions`.`score`), 0) AS `total_score`" +
@@ -728,7 +728,7 @@ func (h *handlers) GetGrades(c echo.Context) error { // FIXME: 高速化
 		myGPA = myGPA / 100 / float64(myCredits)
 	}
 
-	// FIXME: 固定値
+	// FIXME: 固定値, slow query
 	// GPAの統計値
 	// 一つでも修了した科目がある学生のGPA一覧
 	var gpas []float64
@@ -1249,7 +1249,7 @@ type Score struct {
 }
 
 // RegisterScores PUT /api/courses/:courseID/classes/:classID/assignments/scores 採点結果登録
-func (h *handlers) RegisterScores(c echo.Context) error { // FIXME: 高速化
+func (h *handlers) RegisterScores(c echo.Context) error {
 	classID := c.Param("classID")
 
 	//tx, err := h.DB.Beginx()
@@ -1300,7 +1300,7 @@ type Submission struct {
 }
 
 // DownloadSubmittedAssignments GET /api/courses/:courseID/classes/:classID/assignments/export 提出済みの課題ファイルをzip形式で一括ダウンロード
-func (h *handlers) DownloadSubmittedAssignments(c echo.Context) error {
+func (h *handlers) DownloadSubmittedAssignments(c echo.Context) error { // FIXME: 高速化
 	classID := c.Param("classID")
 
 	//tx, err := h.DB.Beginx()
@@ -1406,6 +1406,7 @@ func (h *handlers) GetAnnouncementList(c echo.Context) error { // FIXME: 呼出�
 
 	var announcements []AnnouncementWithoutDetail
 	var args []interface{}
+	// FIXME: slow query
 	query := "SELECT `announcements`.`id`, `courses`.`id` AS `course_id`, `courses`.`name` AS `course_name`, `announcements`.`title`, NOT `unread_announcements`.`is_deleted` AS `unread`" +
 		" FROM `announcements`" +
 		" JOIN `courses` ON `announcements`.`course_id` = `courses`.`id`" +
@@ -1511,7 +1512,7 @@ type AddAnnouncementRequest struct {
 }
 
 // AddAnnouncement POST /api/announcements 新規お知らせ追加
-func (h *handlers) AddAnnouncement(c echo.Context) error { // FIXME: 呼出多
+func (h *handlers) AddAnnouncement(c echo.Context) error {
 	var req AddAnnouncementRequest
 	if err := c.Bind(&req); err != nil {
 		return c.String(http.StatusBadRequest, "Invalid format.")
