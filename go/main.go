@@ -1033,7 +1033,7 @@ type GetClassResponse struct {
 }
 
 // GetClasses GET /api/courses/:courseID/classes 科目に紐づく講義一覧の取得
-func (h *handlers) GetClasses(c echo.Context) error { // FIXME: 高速化
+func (h *handlers) GetClasses(c echo.Context) error { // FIXME: 呼出多
 	userID, _, _, err := getUserInfo(c)
 	if err != nil {
 		c.Logger().Error(err)
@@ -1159,7 +1159,7 @@ func (h *handlers) AddClass(c echo.Context) error {
 }
 
 // SubmitAssignment POST /api/courses/:courseID/classes/:classID/assignments 課題の提出
-func (h *handlers) SubmitAssignment(c echo.Context) error { // FIXME: 高速化
+func (h *handlers) SubmitAssignment(c echo.Context) error { // FIXME: 呼出多
 	userID, _, _, err := getUserInfo(c)
 	if err != nil {
 		c.Logger().Error(err)
@@ -1389,7 +1389,7 @@ type GetAnnouncementsResponse struct {
 }
 
 // GetAnnouncementList GET /api/announcements お知らせ一覧取得
-func (h *handlers) GetAnnouncementList(c echo.Context) error { // FIXME: 高速化
+func (h *handlers) GetAnnouncementList(c echo.Context) error { // FIXME: 呼出多
 	userID, _, _, err := getUserInfo(c)
 	if err != nil {
 		c.Logger().Error(err)
@@ -1510,7 +1510,7 @@ type AddAnnouncementRequest struct {
 }
 
 // AddAnnouncement POST /api/announcements 新規お知らせ追加
-func (h *handlers) AddAnnouncement(c echo.Context) error { // FIXME: 高速化
+func (h *handlers) AddAnnouncement(c echo.Context) error { // FIXME: 呼出多
 	var req AddAnnouncementRequest
 	if err := c.Bind(&req); err != nil {
 		return c.String(http.StatusBadRequest, "Invalid format.")
@@ -1602,7 +1602,7 @@ type AnnouncementDetail struct {
 }
 
 // GetAnnouncementDetail GET /api/announcements/:announcementID お知らせ詳細取得
-func (h *handlers) GetAnnouncementDetail(c echo.Context) error { // FIXME: 高速化
+func (h *handlers) GetAnnouncementDetail(c echo.Context) error { // FIXME: 呼出多
 	userID, _, _, err := getUserInfo(c)
 	if err != nil {
 		c.Logger().Error(err)
