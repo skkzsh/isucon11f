@@ -728,6 +728,7 @@ func (h *handlers) GetGrades(c echo.Context) error { // FIXME: 高速化
 		myGPA = myGPA / 100 / float64(myCredits)
 	}
 
+	// FIXME: 固定値
 	// GPAの統計値
 	// 一つでも修了した科目がある学生のGPA一覧
 	var gpas []float64
@@ -1278,7 +1279,7 @@ func (h *handlers) RegisterScores(c echo.Context) error { // FIXME: 高速化
 
 	for _, score := range req {
 		//if _, err := tx.Exec("UPDATE `submissions` JOIN `users` ON `users`.`id` = `submissions`.`user_id` SET `score` = ? WHERE `users`.`code` = ? AND `class_id` = ?", score.Score, score.UserCode, classID); err != nil {
-		if _, err := h.DB.Exec("UPDATE `submissions` JOIN `users` ON `users`.`id` = `submissions`.`user_id` SET `score` = ? WHERE `users`.`code` = ? AND `class_id` = ?", score.Score, score.UserCode, classID); err != nil { // FIXME: slow query
+		if _, err := h.DB.Exec("UPDATE `submissions` JOIN `users` ON `users`.`id` = `submissions`.`user_id` SET `score` = ? WHERE `users`.`code` = ? AND `class_id` = ?", score.Score, score.UserCode, classID); err != nil { // FIXME: slow query (JOINをやめる)
 			c.Logger().Error(err)
 			return c.NoContent(http.StatusInternalServerError)
 		}
