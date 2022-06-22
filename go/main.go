@@ -1276,13 +1276,15 @@ func (h *handlers) RegisterScores(c echo.Context) error { // FIXME: 高速化
 		return c.String(http.StatusBadRequest, "Invalid format.")
 	}
 
-	for _, score := range req {
-		//if _, err := tx.Exec("UPDATE `submissions` JOIN `users` ON `users`.`id` = `submissions`.`user_id` SET `score` = ? WHERE `users`.`code` = ? AND `class_id` = ?", score.Score, score.UserCode, classID); err != nil {
-		if _, err := h.DB.Exec("UPDATE `submissions` JOIN `users` ON `users`.`id` = `submissions`.`user_id` SET `score` = ? WHERE `users`.`code` = ? AND `class_id` = ?", score.Score, score.UserCode, classID); err != nil { // FIXME: slow query
-			c.Logger().Error(err)
-			return c.NoContent(http.StatusInternalServerError)
+	go func() {
+		for _, score := range req {
+			//if _, err := tx.Exec("UPDATE `submissions` JOIN `users` ON `users`.`id` = `submissions`.`user_id` SET `score` = ? WHERE `users`.`code` = ? AND `class_id` = ?", score.Score, score.UserCode, classID); err != nil {
+			if _, err := h.DB.Exec("UPDATE `submissions` JOIN `users` ON `users`.`id` = `submissions`.`user_id` SET `score` = ? WHERE `users`.`code` = ? AND `class_id` = ?", score.Score, score.UserCode, classID); err != nil { // FIXME: slow query
+				c.Logger().Error(err)
+				//return c.NoContent(http.StatusInternalServerError)
+			}
 		}
-	}
+	}()
 
 	//if err := tx.Commit(); err != nil {
 	//	c.Logger().Error(err)
