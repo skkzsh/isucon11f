@@ -15,6 +15,8 @@ import (
 	"strings"
 
 	_ "net/http/pprof"
+	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
+	echotrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/labstack/echo.v4"
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/gorilla/sessions"
@@ -42,6 +44,13 @@ func main() {
 		log.Fatal(http.ListenAndServe(":6060", nil))
 	}()
 
+	tracer.Start(
+		tracer.WithService("myservice"),
+		tracer.WithEnv("myenv"),
+		//tracer.WithRuntimeMetrics(),
+	)
+	defer tracer.Stop()
+
 	e := echo.New()
 	e.Debug = GetEnv("DEBUG", "") == "true"
 	e.Server.Addr = fmt.Sprintf(":%v", GetEnv("PORT", "7000"))
@@ -50,6 +59,8 @@ func main() {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.Use(session.Middleware(sessions.NewCookieStore([]byte("trapnomura"))))
+
+	e.Use(echotrace.Middleware(echotrace.WithServiceName("isucon11f")))
 
 	db, _ := GetDB(false)
 	db.SetMaxOpenConns(10)
