@@ -17,6 +17,7 @@ import (
 	_ "net/http/pprof"
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 	echotrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/labstack/echo.v4"
+	"gopkg.in/DataDog/dd-trace-go.v1/profiler"
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/gorilla/sessions"
@@ -43,6 +44,25 @@ func main() {
 	go func() {
 		log.Fatal(http.ListenAndServe(":6060", nil))
 	}()
+
+
+	err := profiler.Start(
+		profiler.WithService("yourservice"),
+		profiler.WithEnv("yourenv"),
+		profiler.WithProfileTypes(
+			profiler.CPUProfile,
+			profiler.HeapProfile,
+			// The profiles below are disabled by default to keep overhead
+			// low, but can be enabled as needed.
+
+			// profiler.BlockProfile,
+			// profiler.MutexProfile,
+			// profiler.GoroutineProfile,
+		),
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	tracer.Start(
 		tracer.WithService("myservice"),
