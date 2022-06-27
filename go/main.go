@@ -13,7 +13,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"time"
 
 	_ "net/http/pprof"
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
@@ -89,8 +88,6 @@ func main() {
 	h := &handlers{
 		DB: db,
 	}
-
-	calcGpasScheduler(h.DB)
 
 	e.POST("/initialize", h.Initialize)
 
@@ -786,7 +783,11 @@ func (h *handlers) GetGrades(c echo.Context) error { // FIXME: 高速化
 	//	return c.NoContent(http.StatusInternalServerError)
 	//}
 
-	gpas = gpasCache
+	err, gpas = calcGpas(h.DB)
+	if err != nil {
+		c.Logger().Error(err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
 
 	res := GetGradeResponse{
 		Summary: Summary{
@@ -801,22 +802,6 @@ func (h *handlers) GetGrades(c echo.Context) error { // FIXME: 高速化
 	}
 
 	return c.JSON(http.StatusOK, res)
-}
-
-var gpasCache []float64
-
-func calcGpasScheduler(db *sqlx.DB) {
-	t := time.NewTicker(1 * time.Second)
-	defer t.Stop()
-
-	go func() {
-		for {
-			select {
-			case <-t.C:
-				_, gpasCache = calcGpas(db)
-			}
-		}
-	}()
 }
 
 func calcGpas(db *sqlx.DB) (error, []float64) {
