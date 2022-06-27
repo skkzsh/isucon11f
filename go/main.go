@@ -128,6 +128,8 @@ func main() {
 	e.Logger.Error(e.StartServer(e.Server))
 }
 
+var gpasCache []float64
+
 type InitializeResponse struct {
 	Language string `json:"language"`
 }
@@ -165,6 +167,9 @@ func (h *handlers) Initialize(c echo.Context) error {
 	res := InitializeResponse{
 		Language: "go",
 	}
+
+    _, gpasCache = calcGpas(h.DB)
+
 	return c.JSON(http.StatusOK, res)
 }
 
@@ -803,9 +808,8 @@ func (h *handlers) GetGrades(c echo.Context) error { // FIXME: 高速化
 	return c.JSON(http.StatusOK, res)
 }
 
-var gpasCache []float64
-
 func calcGpasScheduler(db *sqlx.DB) {
+
 	t := time.NewTicker(1 * time.Second)
 	defer t.Stop()
 
