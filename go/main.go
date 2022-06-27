@@ -36,6 +36,8 @@ const (
 	InitDataDirectory         = "../data/"
 	SessionName               = "isucholar_go"
 	mysqlErrNumDuplicateEntry = 1062
+	DatadogServiceName        = "isucon11final"
+	DatadogEnv                = "myenv"
 )
 
 type handlers struct {
@@ -49,8 +51,8 @@ func main() {
 
 
 	err := profiler.Start(
-		profiler.WithService("yourservice"),
-		profiler.WithEnv("yourenv"),
+		profiler.WithService(DatadogServiceName),
+		profiler.WithEnv(DatadogEnv),
 		profiler.WithProfileTypes(
 			profiler.CPUProfile,
 			profiler.HeapProfile,
@@ -67,8 +69,8 @@ func main() {
 	}
 
 	tracer.Start(
-		tracer.WithService("myservice"),
-		tracer.WithEnv("myenv"),
+		tracer.WithService(DatadogServiceName),
+		tracer.WithEnv(DatadogEnv),
 		//tracer.WithRuntimeMetrics(),
 	)
 	defer tracer.Stop()
@@ -82,7 +84,7 @@ func main() {
 	e.Use(middleware.Recover())
 	e.Use(session.Middleware(sessions.NewCookieStore([]byte("trapnomura"))))
 
-	e.Use(echotrace.Middleware(echotrace.WithServiceName("isucon11f")))
+	e.Use(echotrace.Middleware(echotrace.WithServiceName(DatadogServiceName)))
 
 	db, _ := GetDB(false)
 	db.SetMaxOpenConns(10)
