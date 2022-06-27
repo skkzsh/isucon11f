@@ -14,6 +14,8 @@ import (
 	"strconv"
 	"strings"
 
+	"golang.org/x/sync/singleflight"
+
 	_ "net/http/pprof"
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 	echotrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/labstack/echo.v4"
@@ -605,6 +607,8 @@ type SubmissionsScore struct {
 	Score   sql.NullInt64 `db:"score"`
 }
 
+var sfGroup singleflight.Group
+
 // GetGrades GET /api/users/me/grades 成績取得
 func (h *handlers) GetGrades(c echo.Context) error { // FIXME: 高速化
 	userID, _, _, err := getUserInfo(c)
@@ -783,11 +787,15 @@ func (h *handlers) GetGrades(c echo.Context) error { // FIXME: 高速化
 	//	return c.NoContent(http.StatusInternalServerError)
 	//}
 
-	err, gpas = calcGpas(h.DB)
+	gpasIf, err, _ := sfGroup.Do("calcGpas", func()(interface{}, error){
+		err, gpasLocal := calcGpas(h.DB)
+		return gpasLocal, err
+	})
 	if err != nil {
 		c.Logger().Error(err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
+	gpas = gpasIf.([]float64)
 
 	res := GetGradeResponse{
 		Summary: Summary{
