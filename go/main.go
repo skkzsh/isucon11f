@@ -16,10 +16,10 @@ import (
 
 	"golang.org/x/sync/singleflight"
 
-	_ "net/http/pprof"
-	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 	echotrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/labstack/echo.v4"
+	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 	"gopkg.in/DataDog/dd-trace-go.v1/profiler"
+	_ "net/http/pprof"
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/gorilla/sessions"
@@ -49,7 +49,6 @@ func main() {
 		log.Fatal(http.ListenAndServe(":6060", nil))
 	}()
 
-
 	err := profiler.Start(
 		profiler.WithService(DatadogServiceName),
 		profiler.WithEnv(DatadogEnv),
@@ -67,6 +66,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer profiler.Stop()
 
 	tracer.Start(
 		tracer.WithService(DatadogServiceName),
@@ -636,7 +636,7 @@ func (h *handlers) GetGrades(c echo.Context) error { // FIXME: 高速化
 	}
 
 	// 履修している科目の講義一覧の取得
-	registeredCoursesClassesQuery, params, err := sqlx.In("SELECT * FROM `classes` WHERE `course_id` IN (?) ORDER BY `part` DESC", courseIDs, )
+	registeredCoursesClassesQuery, params, err := sqlx.In("SELECT * FROM `classes` WHERE `course_id` IN (?) ORDER BY `part` DESC", courseIDs)
 	if err != nil {
 		c.Logger().Error(err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -789,7 +789,7 @@ func (h *handlers) GetGrades(c echo.Context) error { // FIXME: 高速化
 	//	return c.NoContent(http.StatusInternalServerError)
 	//}
 
-	gpasIf, err, _ := sfGroup.Do("calcGpas", func()(interface{}, error){
+	gpasIf, err, _ := sfGroup.Do("calcGpas", func() (interface{}, error) {
 		err, gpasLocal := calcGpas(h.DB)
 		return gpasLocal, err
 	})
