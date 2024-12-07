@@ -590,6 +590,11 @@ type ClassScore struct {
 	Submitters int    `json:"submitters"` // 提出した学生数
 }
 
+type SubmissionsClassCount struct {
+	ClassID string `db:"class_id"`
+	Count   int    `db:"count"`
+}
+
 // GetGrades GET /api/users/me/grades 成績取得
 func (h *handlers) GetGrades(c echo.Context) error {
 	userID, _, _, err := getUserInfo(c)
@@ -625,16 +630,26 @@ func (h *handlers) GetGrades(c echo.Context) error {
 			return c.NoContent(http.StatusInternalServerError)
 		}
 
+		SubmissionsClassCountList := make([]SubmissionsClassCount, 0, len(classes))
+		if err := h.DB.Select(&SubmissionsClassCountList, "SELECT class_id, COUNT(*) AS count FROM `submissions` GROUP BY `class_id`"); err != nil {
+			c.Logger().Error(err)
+			return c.NoContent(http.StatusInternalServerError)
+		}
+		SubmissionsClassCountMap := make(map[string]int, len(classes))
+		for _, s := range SubmissionsClassCountList {
+			SubmissionsClassCountMap[s.ClassID] = s.Count
+		}
+
 		// 講義毎の成績計算処理
 		classScores := make([]ClassScore, 0, len(classes))
 		var myTotalScore int
 		for _, class := range classes {
 			var submissionsCount int
-			// TODO: N+1
-			if err := h.DB.Get(&submissionsCount, "SELECT COUNT(*) FROM `submissions` WHERE `class_id` = ?", class.ID); err != nil {
-				c.Logger().Error(err)
-				return c.NoContent(http.StatusInternalServerError)
-			}
+			// if err := h.DB.Get(&submissionsCount, "SELECT COUNT(*) FROM `submissions` WHERE `class_id` = ?", class.ID); err != nil {
+			// 	c.Logger().Error(err)
+			// 	return c.NoContent(http.StatusInternalServerError)
+			// }
+			submissionsCount = SubmissionsClassCountMap[class.ID]
 
 			var myScore sql.NullInt64
 			if err := h.DB.Get(&myScore, "SELECT `submissions`.`score` FROM `submissions` WHERE `user_id` = ? AND `class_id` = ?", userID, class.ID); err != nil && err != sql.ErrNoRows {
