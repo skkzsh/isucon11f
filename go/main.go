@@ -622,6 +622,7 @@ func (h *handlers) GetGrades(c echo.Context) error {
 
 	var query string
 
+	// TODO: slow
 	// 科目ごとの学生のTotalScore一覧を取得
 	var UserCourseTotalList []UserCourseTotal
 	query = "SELECT `users`.`id` AS user_id, `courses`.`id` AS `course_id`, IFNULL(SUM(`submissions`.`score`), 0) AS `total_score`" +
