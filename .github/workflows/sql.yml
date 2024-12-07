@@ -1,0 +1,32 @@
+name: sql
+
+on:
+  push:
+    paths:
+      - '**/*.sql'
+      - .github/workflows/sql.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# 同じワークフロー/同じブランチで実行中ジョブがあれば自動停止させる
+# concurrency:
+#   group: ${{ github.workflow }}-${{ github.ref }}
+#   cancel-in-progress: true
+
+jobs:
+  sqlfluff:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - run: pip install sqlfluff
+
+      - run: sqlfluff lint **/*.sql --dialect=mysql -e LT01,LT05,CP02 # -e LT02,CP05 # --dialect=mariadb
+        # working-directory: sql
