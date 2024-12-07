@@ -185,7 +185,7 @@ func (h *handlers) IsLoggedIn(next echo.HandlerFunc) echo.HandlerFunc {
 }
 
 // IsAdmin admin確認用middleware
-func (h *handlers) IsAdmin(next echo.HandlerFunc) echo.HandlerFunc {
+func (h *handlers) IsAdmin(next echo.HandlerFunc) echo.HandlerFunc { // TODO: 高CPU
 	return func(c echo.Context) error {
 		sess, err := session.Get(SessionName, c)
 		if err != nil {
@@ -1129,7 +1129,7 @@ func (h *handlers) AddClass(c echo.Context) error {
 }
 
 // SubmitAssignment POST /api/courses/:courseID/classes/:classID/assignments 課題の提出
-func (h *handlers) SubmitAssignment(c echo.Context) error {
+func (h *handlers) SubmitAssignment(c echo.Context) error { // TODO: 高CPU (リクエスト数が多い)
 	userID, _, _, err := getUserInfo(c)
 	if err != nil {
 		c.Logger().Error(err)
@@ -1371,7 +1371,7 @@ func (h *handlers) GetAnnouncementList(c echo.Context) error {
 	// }
 	// defer tx.Rollback()
 
-	// TODO: slow query (回数が多い)
+	// TODO: slow query (クエリ数が多い)
 	var announcements []AnnouncementWithoutDetail
 	var args []interface{}
 	query := "SELECT `announcements`.`id`, `courses`.`id` AS `course_id`, `courses`.`name` AS `course_name`, `announcements`.`title`, NOT `unread_announcements`.`is_deleted` AS `unread`" +
