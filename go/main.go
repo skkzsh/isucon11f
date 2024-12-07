@@ -660,6 +660,7 @@ func (h *handlers) GetGrades(c echo.Context) error {
 			}
 		}
 
+		// TODO: slow query
 		// この科目を履修している学生のTotalScore一覧を取得
 		var totals []int
 		query := "SELECT IFNULL(SUM(`submissions`.`score`), 0) AS `total_score`" +
@@ -696,6 +697,7 @@ func (h *handlers) GetGrades(c echo.Context) error {
 		myGPA = myGPA / 100 / float64(myCredits)
 	}
 
+	// TODO: slow query
 	// GPAの統計値
 	// 一つでも修了した科目がある学生のGPA一覧
 	var gpas []float64
@@ -1184,7 +1186,6 @@ func (h *handlers) SubmitAssignment(c echo.Context) error {
 	}
 	defer file.Close()
 
-	// TODO: slow query (回数が多い)
 	// if _, err := tx.Exec("INSERT INTO `submissions` (`user_id`, `class_id`, `file_name`) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE `file_name` = VALUES(`file_name`)", userID, classID, header.Filename); err != nil {
 	if _, err := h.DB.Exec("INSERT INTO `submissions` (`user_id`, `class_id`, `file_name`) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE `file_name` = VALUES(`file_name`)", userID, classID, header.Filename); err != nil {
 		c.Logger().Error(err)
@@ -1370,6 +1371,7 @@ func (h *handlers) GetAnnouncementList(c echo.Context) error {
 	// }
 	// defer tx.Rollback()
 
+	// TODO: slow query (回数が多い)
 	var announcements []AnnouncementWithoutDetail
 	var args []interface{}
 	query := "SELECT `announcements`.`id`, `courses`.`id` AS `course_id`, `courses`.`name` AS `course_name`, `announcements`.`title`, NOT `unread_announcements`.`is_deleted` AS `unread`" +
@@ -1587,7 +1589,6 @@ func (h *handlers) GetAnnouncementDetail(c echo.Context) error {
 		return c.String(http.StatusNotFound, "No such announcement.")
 	}
 
-	// TODO: slow query (回数が多い)
 	// if _, err := tx.Exec("UPDATE `unread_announcements` SET `is_deleted` = true WHERE `announcement_id` = ? AND `user_id` = ?", announcementID, userID); err != nil {
 	if _, err := h.DB.Exec("UPDATE `unread_announcements` SET `is_deleted` = true WHERE `announcement_id` = ? AND `user_id` = ?", announcementID, userID); err != nil {
 		c.Logger().Error(err)
