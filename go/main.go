@@ -603,6 +603,17 @@ func (h *handlers) GetGrades(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
+	// SubmissionsClassCountList := make([]SubmissionsClassCount, 0, len(classes))
+	var SubmissionsClassCountList []SubmissionsClassCount
+	if err := h.DB.Select(&SubmissionsClassCountList, "SELECT class_id, COUNT(*) AS count FROM `submissions` GROUP BY `class_id`"); err != nil {
+		c.Logger().Error(err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+	SubmissionsClassCountMap := make(map[string]int, len(SubmissionsClassCountList))
+	for _, s := range SubmissionsClassCountList {
+		SubmissionsClassCountMap[s.ClassID] = s.Count
+	}
+
 	// 履修している科目一覧取得
 	var registeredCourses []Course
 	query := "SELECT `courses`.*" +
@@ -628,16 +639,6 @@ func (h *handlers) GetGrades(c echo.Context) error {
 		if err := h.DB.Select(&classes, query, course.ID); err != nil {
 			c.Logger().Error(err)
 			return c.NoContent(http.StatusInternalServerError)
-		}
-
-		SubmissionsClassCountList := make([]SubmissionsClassCount, 0, len(classes))
-		if err := h.DB.Select(&SubmissionsClassCountList, "SELECT class_id, COUNT(*) AS count FROM `submissions` GROUP BY `class_id`"); err != nil {
-			c.Logger().Error(err)
-			return c.NoContent(http.StatusInternalServerError)
-		}
-		SubmissionsClassCountMap := make(map[string]int, len(classes))
-		for _, s := range SubmissionsClassCountList {
-			SubmissionsClassCountMap[s.ClassID] = s.Count
 		}
 
 		// 講義毎の成績計算処理
