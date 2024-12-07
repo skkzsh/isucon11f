@@ -83,3 +83,5 @@ CREATE TABLE `unread_announcements`
     -- CONSTRAINT FK_unread_announcements_announcement_id FOREIGN KEY (`announcement_id`) REFERENCES `announcements` (`id`),
     -- CONSTRAINT FK_unread_announcements_user_id FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
 );
+
+CREATE INDEX idx_user_id_is_deleted ON unread_announcements(user_id, is_deleted);
