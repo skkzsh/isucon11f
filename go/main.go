@@ -20,6 +20,9 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"golang.org/x/crypto/bcrypt"
+	echotrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/labstack/echo.v4"
+	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
+	"gopkg.in/DataDog/dd-trace-go.v1/profiler"
 )
 
 const (
@@ -28,6 +31,8 @@ const (
 	InitDataDirectory         = "../data/"
 	SessionName               = "isucholar_go"
 	mysqlErrNumDuplicateEntry = 1062
+	ServiceName               = "isucholar"
+	DatadogEnv                = "isucon11f"
 )
 
 type handlers struct {
@@ -36,16 +41,48 @@ type handlers struct {
 
 func main() {
 	e := echo.New()
-	e.Debug = GetEnv("DEBUG", "") == "true"
+	e.Debug = GetEnv("DEBUG", "") == "true" // TODO
 	e.Server.Addr = fmt.Sprintf(":%v", GetEnv("PORT", "7000"))
 	e.HideBanner = true
 
-	e.Use(middleware.Logger())
+	var err error
+
+	err = profiler.Start(
+		profiler.WithService(ServiceName), // DD_SERVICE
+		profiler.WithEnv(DatadogEnv),      // DD_ENV
+		// profiler.WithVersion("<APPLICATION_VERSION>"), // DD_VERSION
+		// profiler.WithTags("<KEY1>:<VALUE1>", "<KEY2>:<VALUE2>"),
+		profiler.WithProfileTypes(
+			profiler.CPUProfile,
+			profiler.HeapProfile,
+			// The profiles below are disabled by default to keep overhead
+			// low, but can be enabled as needed.
+
+			// profiler.BlockProfile,
+			// profiler.MutexProfile,
+			// profiler.GoroutineProfile,
+		),
+	)
+	if err != nil {
+		e.Logger.Error(err)
+	}
+	defer profiler.Stop()
+
+	tracer.Start(
+		tracer.WithService(ServiceName), // DD_SERVICE
+		tracer.WithEnv(DatadogEnv),      // DD_ENV
+		// tracer.WithServiceVersion("abc123"), // DD_VERSION
+		// tracer.WithRuntimeMetrics(), // DD_RUNTIME_METRICS_ENABLED
+	)
+	defer tracer.Stop()
+
+	e.Use(echotrace.Middleware(echotrace.WithServiceName(ServiceName)))
+	e.Use(middleware.Logger()) // TODO
 	e.Use(middleware.Recover())
 	e.Use(session.Middleware(sessions.NewCookieStore([]byte("trapnomura"))))
 
 	db, _ := GetDB(false)
-	db.SetMaxOpenConns(10)
+	db.SetMaxOpenConns(10) // TODO
 
 	h := &handlers{
 		DB: db,

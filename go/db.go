@@ -3,6 +3,9 @@ package main
 import (
 	"github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
+
+	sqltrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/database/sql"
+	sqlxtrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/jmoiron/sqlx"
 )
 
 func GetDB(batch bool) (*sqlx.DB, error) {
@@ -18,5 +21,7 @@ func GetDB(batch bool) (*sqlx.DB, error) {
 	mysqlConfig.ParseTime = true
 	mysqlConfig.MultiStatements = batch
 
-	return sqlx.Open("mysql", mysqlConfig.FormatDSN())
+	sqltrace.Register("mysql", &mysql.MySQLDriver{}, sqltrace.WithServiceName(ServiceName))
+	return sqlxtrace.Open("mysql", mysqlConfig.FormatDSN())
+	// return sqlx.Open("mysql", mysqlConfig.FormatDSN())
 }
