@@ -100,7 +100,7 @@ slp: prepare
 	| tee ~/results/pt-query-digest-$(DATE).log
 
 tune: prepare
-	sudo mysqltuner --user isucon --pass isucon \
+	sudo mysqltuner \
 	| tee ~/results/mysqltuner-$(DATE).log
 
 issue:
