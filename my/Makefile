@@ -110,6 +110,7 @@ issue:
 	echo "<details><summary>Bench error</summary>"; echo -e "\n\`\`\`"; cat ~/results/bench-error-$(DATE).log; echo "\`\`\`"; echo "</details>"; \
 	echo "<details><summary>alp</summary>"; echo -e "\n\`\`\`"; cat ~/results/alp-$(DATE).log; echo "\`\`\`";  echo "</details>"; \
 	echo "<details><summary>Slow query</summary>"; echo -e "\n\`\`\`"; cat ~/results/pt-query-digest-$(DATE).log; echo "\`\`\`";  echo "</details>"; \
+	echo "<details><summary>NGINX error</summary>"; echo -e "\n\`\`\`"; sudo cat $(NGINX_ERROR_LOG).log; echo "\`\`\`"; echo "</details>"; \
 	echo "<details><summary>MySQL tuner</summary>"; echo -e "\n\`\`\`"; cat ~/results/mysqltuner-$(DATE).log; echo "\`\`\`";  echo "</details>"; \
 	echo "<details><summary>MySQL error</summary>"; echo -e "\n\`\`\`"; sudo cat $(MYSQL_ERROR_LOG).log; echo "\`\`\`";  echo "</details>"; \
 	echo "<details><summary>App error</summary>"; echo -e "\n\`\`\`"; sudo journalctl -u $(SERVICE_NAME) --since "$$(systemctl show $(SERVICE_NAME) -p ActiveEnterTimestamp | cut -d= -f2)" --no-pager -o json | jq -r .MESSAGE | jq -R 'fromjson? | select(.error != "")'; echo "\`\`\`"; echo "</details>"; \
@@ -118,5 +119,3 @@ issue:
 
     # echo "<details><summary>App error</summary>"; echo -e "\n\`\`\`"; sudo journalctl -u $(SERVICE_NAME) --since "$$(systemctl show $(SERVICE_NAME) -p ActiveEnterTimestamp | cut -d= -f2)" --no-pager -p err ; echo "\`\`\`"; echo "</details>"; \
 
-    # TODO: nginx error
-	# echo "<details><summary>NGINX error</summary>"; echo -e "\n\`\`\`"; sudo cat $(NGINX_ERROR_LOG).log; echo "\`\`\`"; echo "</details>"; \
