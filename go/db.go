@@ -20,6 +20,7 @@ func GetDB(batch bool) (*sqlx.DB, error) {
 	}
 	mysqlConfig.ParseTime = true
 	mysqlConfig.MultiStatements = batch
+	mysqlConfig.InterpolateParams = true // 追加
 
 	sqltrace.Register("mysql", &mysql.MySQLDriver{}, sqltrace.WithServiceName(ServiceName))
 	return sqlxtrace.Open("mysql", mysqlConfig.FormatDSN())
