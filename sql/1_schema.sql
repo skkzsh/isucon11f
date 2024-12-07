@@ -65,6 +65,8 @@ CREATE TABLE `submissions`
     -- CONSTRAINT FK_submissions_class_id FOREIGN KEY (`class_id`) REFERENCES `classes` (`id`)
 );
 
+CREATE INDEX idx_class_id ON submissions(class_id);
+
 CREATE TABLE `announcements`
 (
     `id`         CHAR(26) PRIMARY KEY,
