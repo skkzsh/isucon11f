@@ -13,9 +13,7 @@ BUILD_CMD := make
 BENCH_DIR := ~/benchmarker
 BENCH_CMD := ./bin/benchmarker -target localhost:443 -tls
 ID_PATTERN := [0-9A-Z]+
-ALP_MATCH  := ''
-# '^/api/announcements/[0-9A-Z]+$$','^/api/courses/[0-9A-Z]+$$','^/api/courses/[0-9A-Z]+/status$$','^/api/courses/[0-9A-Z]+/classes$$','^/api/courses/[0-9A-Z]+/classes/[0-9A-Z]+/assignments$$','^/api/courses/[0-9A-Z]+/classes/[0-9A-Z]+/assignments/export$$','^/api/courses/[0-9A-Z]+/classes/[0-9A-Z]+/assignments/scores$$'
-# TODO: ALP_MATCHはAPIの実装やnginxのlogから決める
+ALP_MATCH  := '^/api/courses/$(ID_PATTERN)$$','^/api/courses/$(ID_PATTERN)/status$$','^/api/courses/$(ID_PATTERN)/classes$$','^/api/courses/$(ID_PATTERN)/classes/$(ID_PATTERN)/assignments$$','^/api/courses/$(ID_PATTERN)/classes/$(ID_PATTERN)/assignments/scores$$','^/api/courses/$(ID_PATTERN)/classes/$(ID_PATTERN)/assignments/export$$','^/api/announcements/$(ID_PATTERN)$$'
 
 APP_DIR      := $(GIT_DIR)/$(PROG)
 SERVICE_NAME := $(APP_NAME).$(PROG)
@@ -35,8 +33,8 @@ MYSQLD_CONF     := /etc/mysql/mysql.conf.d/mysqld.cnf
 .PHONY: conf/backup conf/nginx/deploy conf/mysql/deploy rotate truncate build restart prepare bench/before bench bench/after alp slp issue
 
 all: bench bench/after
-bench/after: tune issue
-# TODO: alp slp
+bench/after: alp tune issue
+# TODO: slp
 bench/before: prepare truncate build restart
 
 conf/backup:
@@ -110,6 +108,7 @@ issue:
 	echo "\`\`\`"; grep -A10 VALIDATION ~/results/bench-$(DATE).log; echo "\`\`\`"; \
 	echo "<details><summary>Bench</summary>"; echo -e "\n\`\`\`"; cat ~/results/bench-$(DATE).log; echo "\`\`\`"; echo "</details>"; \
 	echo "<details><summary>Bench error</summary>"; echo -e "\n\`\`\`"; cat ~/results/bench-error-$(DATE).log; echo "\`\`\`"; echo "</details>"; \
+	echo "<details><summary>alp</summary>"; echo -e "\n\`\`\`"; cat ~/results/alp-$(DATE).log; echo "\`\`\`";  echo "</details>"; \
 	echo "<details><summary>MySQL tuner</summary>"; echo -e "\n\`\`\`"; cat ~/results/mysqltuner-$(DATE).log; echo "\`\`\`";  echo "</details>"; \
 	echo "<details><summary>MySQL error</summary>"; echo -e "\n\`\`\`"; sudo cat $(MYSQL_ERROR_LOG).log; echo "\`\`\`";  echo "</details>"; \
 	echo "<details><summary>App error</summary>"; echo -e "\n\`\`\`"; sudo journalctl -u $(SERVICE_NAME) --since "$$(systemctl show $(SERVICE_NAME) -p ActiveEnterTimestamp | cut -d= -f2)" --no-pager -o json | jq -r .MESSAGE | jq -R 'fromjson? | select(.error != "")'; echo "\`\`\`"; echo "</details>"; \
@@ -120,7 +119,5 @@ issue:
 
     # TODO: nginx error
 	# echo "<details><summary>NGINX error</summary>"; echo -e "\n\`\`\`"; sudo cat $(NGINX_ERROR_LOG).log; echo "\`\`\`"; echo "</details>"; \
-    # TODO: alp
-	# echo "<details><summary>alp</summary>"; echo -e "\n\`\`\`"; cat ~/results/alp-$(DATE).log; echo "\`\`\`";  echo "</details>"; \
     # TODO: slow query
 	# echo "<details><summary>Slow query</summary>"; echo -e "\n\`\`\`"; cat ~/results/pt-query-digest-$(DATE).log; echo "\`\`\`";  echo "</details>"; \
