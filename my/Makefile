@@ -18,7 +18,8 @@ ALP_MATCH  := '^/api/courses/$(ID_PATTERN)$$','^/api/courses/$(ID_PATTERN)/statu
 APP_DIR      := $(GIT_DIR)/$(PROG)
 SERVICE_NAME := $(APP_NAME).$(PROG)
 
-ALP_OPTS ?= -q # --qs-ignore-values --limit 10000
+ALP_OPTS ?= -q --qs-ignore-values
+# --limit 10000
 
 NGINX_ACCESS_LOG  := /var/log/nginx/access
 NGINX_ERROR_LOG   := /var/log/nginx/error
