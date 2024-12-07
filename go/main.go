@@ -622,7 +622,7 @@ func (h *handlers) GetGrades(c echo.Context) error {
 
 	var query string
 
-	// TODO: slow
+	// TODO: slow (requestによらず同じクエリ -> cache or single flight)
 	// 科目ごとの学生のTotalScore一覧を取得
 	var UserCourseTotalList []UserCourseTotal
 	query = "SELECT `users`.`id` AS user_id, `courses`.`id` AS `course_id`, IFNULL(SUM(`submissions`.`score`), 0) AS `total_score`" +
@@ -741,7 +741,7 @@ func (h *handlers) GetGrades(c echo.Context) error {
 		myGPA = myGPA / 100 / float64(myCredits)
 	}
 
-	// TODO: slow query
+	// TODO: slow query (requestによらず同じクエリ -> cache or single flight)
 	// GPAの統計値
 	// 一つでも修了した科目がある学生のGPA一覧
 	var gpas []float64
