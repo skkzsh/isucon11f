@@ -82,6 +82,3 @@ max_binlog_size   = 100M
 
 innodb_flush_log_at_trx_commit = 0
 disable-log-bin = 1
-
-# Tuner
-join_buffer_size = 512K
